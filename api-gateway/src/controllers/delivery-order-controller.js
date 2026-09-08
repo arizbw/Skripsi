@@ -9,7 +9,7 @@ const getAllDOAdminController = async (request, response, next) => {
   try {
     const role = request.decodedToken.role;
     const type = request.decodedToken.type;
-    if (role.name == "Super" && type == "web") {
+    if (role.name === "Super" && type === "web") {
       const limit = parseInt(request.query.limit) || 10;
       const skip = parseInt(request.query.skip) || 0;
       const { deliveryOrders, total } = await getAllDOAdminService(skip, limit);
@@ -25,9 +25,7 @@ const getAllDOAdminController = async (request, response, next) => {
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -40,7 +38,7 @@ const getAllDOController = async (request, response, next) => {
     console.log(type);
     const role = request.decodedToken.role;
     let { start_date = "", end_date = "", status = null } = request.query;
-    if (role.name != "Super" && role.is_allowed_do && type == "web") {
+    if (role.name !== "Super" && role.is_allowed_do && type === "web") {
       const limit = parseInt(request.query.limit) || 10;
       const skip = parseInt(request.query.skip) || 0;
       const dcId = role.dc_id;
@@ -64,9 +62,7 @@ const getAllDOController = async (request, response, next) => {
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -77,15 +73,13 @@ const getDOByIDController = async (request, response, next) => {
   try {
     const type = request.decodedToken.type;
     const role = request.decodedToken.role;
-    if (role.is_allowed_do && type == "web") {
+    if (role.is_allowed_do && type === "web") {
       const result = await getDOByIDService(request.params.doId);
       response
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);

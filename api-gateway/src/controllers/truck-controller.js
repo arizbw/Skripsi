@@ -9,15 +9,13 @@ const getAllTruckAdminController = async (request, response, next) => {
   try {
     const type = request.decodedToken.type;
     const role = request.decodedToken.role;
-    if (role.name == "Super" && type == "web") {
+    if (role.name === "Super" && type === "web") {
       const result = await getAllTruckAdminService();
       response
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -33,7 +31,7 @@ const getAllTrucksController = async (request, response, next) => {
       second_status = null,
       type = null,
     } = request.query;
-    if (role.name != "Super" && role.is_allowed_truck && type_device == "web") {
+    if (role.name !== "Super" && role.is_allowed_truck && type_device === "web") {
       const dcId = role.dc_id;
       const trucks = await getAllTrucksService(
         dcId,
@@ -45,9 +43,7 @@ const getAllTrucksController = async (request, response, next) => {
         .status(200)
         .json(HTTPResponse(true, 200, "Success", trucks, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -58,15 +54,13 @@ const getTruckByIDController = async (request, response, next) => {
   try {
     const type = request.decodedToken.type;
     const role = request.decodedToken.role;
-    if (role.is_allowed_truck && type == "web") {
+    if (role.is_allowed_truck && type === "web") {
       const result = await getTruckByIDService(request.params.truckId);
       response
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);

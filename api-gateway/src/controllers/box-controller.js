@@ -13,9 +13,7 @@ const addBoxToDOController = async (request, response, next) => {
   try {
     const role = request.decodedToken.role;
     if (!role.is_allowed_do) {
-      return response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      return response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
 
     const doId = parseInt(request.params.doId);
@@ -63,9 +61,7 @@ const deleteBoxByIdController = async (request, response, next) => {
           )
         );
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -77,9 +73,7 @@ const boxDimensionCalculation = async (request, response, next) => {
     const role = request.decodedToken.role;
 
     if (!role?.is_allowed_do) {
-      return response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      return response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
 
     const { box_id } = request.body;
@@ -156,9 +150,7 @@ const getBoxByNameController = async (request, response, next) => {
         .status(200)
         .json(HTTPResponse(true, 200, "Box ditemukan", box, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -175,9 +167,7 @@ const getAllBoxesController = async (request, response, next) => {
         .status(200)
         .json(HTTPResponse(true, 200, "All boxes", boxes, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -195,9 +185,7 @@ const createBoxController = async (request, response, next) => {
         .status(201)
         .json(HTTPResponse(true, 201, "Box created", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);

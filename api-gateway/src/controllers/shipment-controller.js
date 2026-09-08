@@ -15,7 +15,7 @@ const getAllShipmentAdminController = async (request, response, next) => {
   try {
     const type = request.decodedToken.type;
     const role = request.decodedToken.role;
-    if (role.name == "Super" && type == "web") {
+    if (role.name === "Super" && type === "web") {
       const limit = parseInt(request.query.limit) || 10;
       const skip = parseInt(request.query.skip) || 0;
       const { shipment, total } = await getAllShipmentAdminService(skip, limit);
@@ -31,9 +31,7 @@ const getAllShipmentAdminController = async (request, response, next) => {
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -44,7 +42,7 @@ const getAllShipmentController = async (request, response, next) => {
   try {
     const role = request.decodedToken.role;
     const type = request.decodedToken.type;
-    if (role.name != "Super" && role.is_allowed_shipment && type == "web") {
+    if (role.name !== "Super" && role.is_allowed_shipment && type === "web") {
       const dc_id = parseInt(role.dc_id);
       const limit = parseInt(request.query.limit) || 10;
       const skip = parseInt(request.query.skip) || 0;
@@ -65,9 +63,7 @@ const getAllShipmentController = async (request, response, next) => {
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -78,7 +74,7 @@ const getAllMobileShipmentsController = async (request, response, next) => {
   try {
     const type = request.decodedToken.type;
     const role = request.decodedToken.role;
-    if (role.is_allowed_shipment && type == "mobile") {
+    if (role.is_allowed_shipment && type === "mobile") {
       const limit = parseInt(request.query.limit) || 10;
       const skip = parseInt(request.query.skip) || 0;
       const { shipments, total } = await getAllMobileShipmentsService(
@@ -98,9 +94,7 @@ const getAllMobileShipmentsController = async (request, response, next) => {
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -111,15 +105,13 @@ const searchAllMobileShipmentsController = async (request, response, next) => {
   try {
     const role = request.decodedToken.role;
     const type = request.decodedToken.type;
-    if (role.is_allowed_shipment && type == "mobile") {
+    if (role.is_allowed_shipment && type === "mobile") {
       const result = await searchAllMobileShipmentsService(request);
       response
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -130,15 +122,13 @@ const getDetailMobileShipmentController = async (request, response, next) => {
   try {
     const role = request.decodedToken.role;
     const type = request.decodedToken.type;
-    if (role.is_allowed_shipment && type == "mobile") {
+    if (role.is_allowed_shipment && type === "mobile") {
       const result = await getDetailMobileShipmentService(request.params.id);
       response
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -153,9 +143,7 @@ const getDetailShipmentWebController = async (req, res, next) => {
       const result = await getDetailShipmentWebService(req.params.id);
       res.status(200).json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      res
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      res.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -173,9 +161,7 @@ const simpanShipmentStatusController = async (request, response, next) => {
           HTTPResponse(true, 200, "Status updated successfully", null, null)
         );
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -192,7 +178,7 @@ const getBoxLayoutingCoordinatesController = async (
     console.log(`[BoxLayouting][Controller] START idShipment=%s role=%s type=%s`, request.params.idShipment, request?.decodedToken?.role?.name, request?.decodedToken?.type);
     const role = request.decodedToken.role;
     const type = request.decodedToken.type;
-    if (role.is_allowed_shipment && type == "web") {
+    if (role.is_allowed_shipment && type === "web") {
       const result = await getBoxLayoutingCoordinatesService(request.params.idShipment);
       const durationMs = Date.now() - startedAt;
 
@@ -209,9 +195,7 @@ const getBoxLayoutingCoordinatesController = async (
       response.status(200).json(HTTPResponse(true, 200, "Success", result, null));
     } else {
       console.warn(`[BoxLayouting][Controller] UNAUTHORIZED idShipment=%s roleAllowed=%s type=%s`, request.params.idShipment, role?.is_allowed_shipment, type);
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     console.error(`[BoxLayouting][Controller] ERROR idShipment=%s err=%s`, request.params?.idShipment, error?.message || error);
@@ -223,7 +207,7 @@ const updateTruckTypeInShipmentController = async (req, res, next) => {
   try {
     const role = req.decodedToken.role;
     if (!role.is_allowed_shipment) {
-      return res.status(401).json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      return response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));;
     }
 
     const shipmentId = parseInt(req.params.id);

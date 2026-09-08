@@ -3,7 +3,7 @@ import { getAllProductLineService } from "../services/product-line-service.js";
 const getAllProductLineController = async (request, response, next) => {
   try {
     const type = request.decodedToken.type;
-    if (type == "web") {
+    if (type === "web") {
       const role = request.decodedToken.role;
       const limit = parseInt(request.query.limit) || 10;
       const skip = parseInt(request.query.skip) || 0;
@@ -32,8 +32,8 @@ const getAllProductLineController = async (request, response, next) => {
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
       response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Device Type"));
+        .status(403)
+        .json(HTTPResponse(false, 403, null, null, "Unauthorized Device Type"));
     }
   } catch (error) {
     next(error);

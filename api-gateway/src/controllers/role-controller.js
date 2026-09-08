@@ -5,15 +5,13 @@ const getAllRoleController = async (request, response, next) => {
   try {
     const role = request.decodedToken.role;
     const type = request.decodedToken.type;
-    if (role.is_allowed_user && type == "web") {
+    if (role.is_allowed_user && type === "web") {
       const result = await getAllRoleService();
       response
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);

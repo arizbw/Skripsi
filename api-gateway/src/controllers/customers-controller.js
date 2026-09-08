@@ -6,7 +6,7 @@ import {
 
 const getAllCustomersController = async (request, response, next) => {
   try {
-    if (request.decodedToken.type == "web") {
+    if (request.decodedToken.type === "web") {
       const dc_id = request.decodedToken.role.dc_id;
       const limit = parseInt(request.query.limit) || 10;
       const skip = parseInt(request.query.skip) || 0;
@@ -27,9 +27,7 @@ const getAllCustomersController = async (request, response, next) => {
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Device Type"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Unauthorized Device Type"));
     }
   } catch (error) {
     next(error);
@@ -38,16 +36,14 @@ const getAllCustomersController = async (request, response, next) => {
 
 const getCustomerByIdController = async (request, response, next) => {
   try {
-    if (request.decodedToken.type == "web") {
+    if (request.decodedToken.type === "web") {
       const { customerId } = request.params;
       const result = await getCustomerByIdService(customerId);
       response
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Device Type"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Unauthorized Device Type"));
     }
   } catch (error) {
     next(error);

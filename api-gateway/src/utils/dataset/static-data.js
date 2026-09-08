@@ -282,7 +282,7 @@ export const user = [
   {
     id: userAdminId,
     username: "admin",
-    password: "$2a$10$667VN4QpOTNNQ1IbT.w5FuxCoF3a.EcSzCDaqyUp99gj575Vf394.",
+    password: "$2b$10$06GOjV3415DRJZuIJQ98W.xUFKBT1MfZow0mPYZOa7YajDUcz5SA2",
     first_name: "Admin",
     last_name: "Super",
     email: "admin@gmail.com",
@@ -291,7 +291,7 @@ export const user = [
   },
   {
     username: "adminbanten",
-    password: "$2a$10$667VN4QpOTNNQ1IbT.w5FuxCoF3a.EcSzCDaqyUp99gj575Vf394.",
+    password: "$2b$10$06GOjV3415DRJZuIJQ98W.xUFKBT1MfZow0mPYZOa7YajDUcz5SA2",
     first_name: "Admin",
     last_name: "Banten",
     email: "adminbanten@gmail.com",
@@ -300,7 +300,7 @@ export const user = [
   },
   {
     username: "adminjakarta",
-    password: "$2a$10$667VN4QpOTNNQ1IbT.w5FuxCoF3a.EcSzCDaqyUp99gj575Vf394.",
+    password: "$2b$10$06GOjV3415DRJZuIJQ98W.xUFKBT1MfZow0mPYZOa7YajDUcz5SA2",
     first_name: "Admin",
     last_name: "Jakarta",
     email: "adminjakarta@gmail.com",
@@ -309,7 +309,7 @@ export const user = [
   },
   {
     username: "absolutebanten",
-    password: "$2a$10$667VN4QpOTNNQ1IbT.w5FuxCoF3a.EcSzCDaqyUp99gj575Vf394.",
+    password: "$2b$10$06GOjV3415DRJZuIJQ98W.xUFKBT1MfZow0mPYZOa7YajDUcz5SA2",
     first_name: "Absolut",
     last_name: "Banten",
     email: "absolutebanten@gmail.com",
@@ -318,7 +318,7 @@ export const user = [
   },
   {
     username: "absolutejakarta",
-    password: "$2a$10$667VN4QpOTNNQ1IbT.w5FuxCoF3a.EcSzCDaqyUp99gj575Vf394.",
+    password: "$2b$10$06GOjV3415DRJZuIJQ98W.xUFKBT1MfZow0mPYZOa7YajDUcz5SA2",
     first_name: "Absolute",
     last_name: "Jakarta",
     email: "absolutejakarta@gmail.com",
