@@ -5,10 +5,10 @@ const getAllProductController = async (request, response, next) => {
     const type = request.decodedToken.type;
     const role = request.decodedToken.role;
     if (
-      (role.name == "Super" ||
-        role.name == "Admin DC Banten" ||
-        role.name == "Admin DC Jakarta") &&
-      type == "web"
+      (role.name === "Super" ||
+        role.name === "Admin DC Banten" ||
+        role.name === "Admin DC Jakarta") &&
+      type === "web"
     ) {
       const limit = parseInt(request.query.limit) || 10;
       const skip = parseInt(request.query.skip) || 0;
@@ -25,9 +25,7 @@ const getAllProductController = async (request, response, next) => {
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);

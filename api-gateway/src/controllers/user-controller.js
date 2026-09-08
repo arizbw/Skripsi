@@ -20,10 +20,16 @@ const loginUserMobileController = async (request, response, next) => {
     next(error);
   }
 };
+
 const registerUserController = async (request, response, next) => {
   try {
-    const result = await userService.registerUserService(request);
-    response.status(200).json(HTTPResponse(true, 200, "Success", result, null));
+    const role = request.decodedToken.role;
+    if (role.is_allowed_user) {
+      const result = await userService.registerUserService(request);
+      response.status(200).json(HTTPResponse(true, 200, "Success", result, null));
+    } else {
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
+    }
   } catch (error) {
     next(error);
   }
@@ -31,8 +37,13 @@ const registerUserController = async (request, response, next) => {
 
 const updateUserController = async (request, response, next) => {
   try {
-    const result = await userService.updateUserService(request);
-    response.status(200).json(HTTPResponse(true, 200, "Success", result, null));
+    const role = request.decodedToken.role;
+    if (role.is_allowed_user) {
+      const result = await userService.updateUserService(request);
+      response.status(200).json(HTTPResponse(true, 200, "Success", result, null));
+    } else {
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
+    }
   } catch (error) {
     next(error);
   }
@@ -53,8 +64,13 @@ const refreshTokenController = async (request, response, next) => {
 
 const activateUserController = async (request, response, next) => {
   try {
-    const result = await userService.activateUserService(request);
-    response.status(200).json(HTTPResponse(true, 200, "Success", result, null));
+    const role = request.decodedToken.role;
+    if (role.is_allowed_user) {
+      const result = await userService.activateUserService(request);
+      response.status(200).json(HTTPResponse(true, 200, "Success", result, null));
+    } else {
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
+    }
   } catch (error) {
     next(error);
   }
@@ -62,8 +78,13 @@ const activateUserController = async (request, response, next) => {
 
 const deactivateUserController = async (request, response, next) => {
   try {
-    const result = await userService.deactivateUserService(request);
-    response.status(200).json(HTTPResponse(true, 200, "Success", result, null));
+    const role = request.decodedToken.role;
+    if (role.is_allowed_user) {
+      const result = await userService.deactivateUserService(request);
+      response.status(200).json(HTTPResponse(true, 200, "Success", result, null));
+    } else {
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
+    }
   } catch (error) {
     next(error);
   }
@@ -78,9 +99,7 @@ const getAllUserController = async (request, response, next) => {
         .status(200)
         .json(HTTPResponse(true, 200, "Success", result, null));
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     next(error);
@@ -98,14 +117,8 @@ const logoutUserController = async (request, response, next) => {
 
 const dashboardController = async (request, response, next) => {
   try {
-    if (
-      !request.decodedToken.role.name == "Admin DC Jakarta" ||
-      !request.decodedToken.role.name == "Admin DC Banten" ||
-      !request.decodedToken.role.name == "Super"
-    ) {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+    if (!["Admin DC Jakarta", "Admin DC Banten", "Super"].includes(request.decodedToken.role.name)) {
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     } else {
       const result = await userService.dashboardService(
         request.decodedToken.role.dc_id
@@ -121,10 +134,8 @@ const dashboardController = async (request, response, next) => {
 
 const dashboardAdminController = async (request, response, next) => {
   try {
-    if (request.decodedToken.role.name != "Super") {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+    if (request.decodedToken.role.name !== "Super") {
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     } else {
       const result = await userService.dashboardServiceAdmin();
       response

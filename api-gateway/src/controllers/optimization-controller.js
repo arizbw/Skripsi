@@ -26,7 +26,7 @@ const priorityOptimizationController = async (request, response, next) => {
         },
       });
     } catch (_) {}
-    if (role.is_allowed_shipment && type == "web") {
+    if (role.is_allowed_shipment && type === "web") {
       const { shipments, failedDO, status } = await priorityOptimizationService(
         request
       );
@@ -58,9 +58,7 @@ const priorityOptimizationController = async (request, response, next) => {
           )
         );
     } else {
-      response
-        .status(401)
-        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+      response.status(403).json(HTTPResponse(false, 403, null, null, "Forbidden"));
     }
   } catch (error) {
     try {
