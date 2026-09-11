@@ -162,9 +162,9 @@ publicRouter.post(
  *       500:
  *         description: RabbitMQ NOT connected
  */
-publicRouter.get("/api/v1/rabbitmq/health", (_, res) => {
+publicRouter.get("/api/v1/rabbitmq/health", async (_, res) => {
   try {
-    const channel = getChannel();
+    const channel = await getChannel();
 
     const isClosed =
       !channel.connection ||

@@ -50,6 +50,14 @@ const PengirimanCard = ({ data, onClick, isActive }) => {
             {convertMinutesToHoursAndMinutes(data.total_time)}
           </p>
         </div>
+        {data.total_emission !== null && data.total_emission !== undefined && (
+          <div>
+            <p className={`text-sm ${isActive ? 'text-neutral-200' : 'text-neutral-500'}`}>Total Emisi CO2</p>
+            <p className={`text-base ${isActive ? 'text-white' : 'text-green-600 font-semibold'}`}>
+              {(data.total_emission / 1000).toFixed(2)} kg
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

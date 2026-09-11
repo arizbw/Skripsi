@@ -280,6 +280,17 @@ const simpanShipmentStatusService = async (request) => {
   console.log(`Updating shipment ${shipment.id} to status ${newStatus}`);
   await updateShipment(shipment.id, { status: newStatus, isSaved: true });
 
+  if (shipment.truck_id) {
+    console.log(`Updating truck ${shipment.truck_id} to status UNAVAILABLE and ON_DELIVERY`);
+    await prisma.truck.update({
+      where: { id: shipment.truck_id },
+      data: { 
+        first_status: "UNAVAILABLE", 
+        second_status: "ON_DELIVERY"
+      },
+    });
+  }
+
   const deliveryOrders = await getDeliveryOrdersByShipmentId(shipment.id);
 
   for (let order of deliveryOrders) {

@@ -43,22 +43,23 @@ model DC {
 }
 
 model User {
-  id           String    @id @default(uuid())
-  username     String    @db.VarChar(100)
-  password     String    @db.VarChar(100)
-  first_name   String    @db.VarChar(100)
-  last_name    String    @db.VarChar(100)
-  phone_num    String?   @db.VarChar(100)
-  email        String?   @db.VarChar(100)
+  id           String        @id @default(uuid())
+  username     String        @db.VarChar(100)
+  password     String        @db.VarChar(100)
+  first_name   String        @db.VarChar(100)
+  last_name    String        @db.VarChar(100)
+  phone_num    String?       @db.VarChar(100)
+  email        String?       @db.VarChar(100)
   web_token    String?
   mobile_token String?
-  is_active    Boolean   @default(true)
-  created_at   DateTime  @default(now()) @db.Timestamptz(3)
-  updated_at   DateTime? @updatedAt @db.Timestamptz(3)
-  is_deleted   Boolean   @default(false)
-  deleted_at   DateTime? @db.Timestamptz(3)
+  is_active    Boolean       @default(true)
+  created_at   DateTime      @default(now()) @db.Timestamptz(3)
+  updated_at   DateTime?     @updatedAt @db.Timestamptz(3)
+  is_deleted   Boolean       @default(false)
+  deleted_at   DateTime?     @db.Timestamptz(3)
   role_id      Int?
-  role         Role?     @relation(fields: [role_id], references: [id])
+  role         Role?         @relation(fields: [role_id], references: [id])
+  ChatSession  ChatSession[]
 
   @@unique([username, email])
   @@map("user")
@@ -87,6 +88,7 @@ model Location {
   id                   String             @id @default(uuid())
   latitude             Float
   longitude            Float
+  name                 String?            @db.VarChar(200)
   address              String
   provinsi             String
   kabupaten_kota       String
@@ -144,6 +146,7 @@ model Shipment {
   eta                          DateTime?          @db.Timestamptz(3)
   truck_id                     Int?
   shipment_cost                Int?
+  total_co2_emission_g         Float?
   truck                        Truck?             @relation(fields: [truck_id], references: [id])
   ShipmentLocation             ShipmentLocation[]
   ShipmentDO                   ShipmentDO[]
@@ -348,4 +351,28 @@ enum ShipmentStatus {
   CANCELLED
   DONE
   DRAF
+}
+
+model ChatSession {
+  id         String        @id @default(uuid())
+  session_id String        @unique
+  user_id    String
+  user       User          @relation(fields: [user_id], references: [id])
+  title      String?
+  created_at DateTime      @default(now()) @db.Timestamptz(3)
+  updated_at DateTime?     @updatedAt @db.Timestamptz(3)
+  messages   ChatMessage[]
+
+  @@map("chat_session")
+}
+
+model ChatMessage {
+  id              Int         @id @default(autoincrement())
+  chat_session_id String
+  chat_session    ChatSession @relation(fields: [chat_session_id], references: [id], onDelete: Cascade)
+  sender          String
+  text            String
+  created_at      DateTime    @default(now()) @db.Timestamptz(3)
+
+  @@map("chat_message")
 }

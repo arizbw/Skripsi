@@ -4,6 +4,7 @@ import { BaseTablePaginationShipment } from '../../components/BaseTablePaginatio
 import { SelectColumnFilter } from '../../components/BaseTable'
 import React, { useEffect, useState } from 'react'
 import { Loading } from '../../components/Loading'
+import { Modal } from '../../components/Modal'
 import { FaCalendarAlt, FaClipboard } from 'react-icons/fa'
 import axiosAuthInstance from '../../utils/axios-auth-instance'
 import jwtDecode from 'jwt-decode'
@@ -59,6 +60,7 @@ function DoSelectPriority() {
   const [showLoading, setShowLoading] = useState(false)
   const [dataDO, setDataDO] = useState([])
   const [dc_id, setDcId] = useState("")
+  const [isOpenError, setIsOpenError] = useState(false)
   const handleManual = async () => {
     try {
       const response = await axiosAuthInstance.post(
@@ -76,11 +78,11 @@ function DoSelectPriority() {
       localStorage.setItem('responseData', JSON.stringify(response.data));
 
       console.log('Pengiriman berhasil dibuat:', response.data);
+      navigate('/pengiriman/otomatisasi')
     } catch (error) {
       console.error('Gagal membuat pengiriman:', error.response?.data?.message || error.message);
+      setIsOpenError(true)
     }
-    navigate('/pengiriman/otomatisasi')  
-
   };
 
 
@@ -174,6 +176,14 @@ function DoSelectPriority() {
 
   return (
     <>
+      <Modal
+        variant="danger"
+        isOpen={isOpenError}
+        closeModal={() => setIsOpenError(false)}
+        title="Terjadi Kesalahan"
+        description="Mohon coba lagi."
+        rightButtonText="Tutup"
+      />
       <div className="w-full  mx-auto space-y-5 mt-4 visible pt-10 px-10">
         {/* Section 1: Atur Tanggal Pengiriman */}
         <div className="w-full bg-white border rounded-lg shadow-md">

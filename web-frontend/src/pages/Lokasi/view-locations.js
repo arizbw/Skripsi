@@ -1,9 +1,9 @@
 import { Dropdown } from '../../components/Dropdown'
 import { TextField } from '../../components/TextField'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Loading } from '../../components/Loading'
 import axiosAuthInstance from '../../utils/axios-auth-instance'
-import { GoogleMap, LoadScript, Marker, StandaloneSearchBox } from '@react-google-maps/api'
+import GoogleMap from '../../components/GoogleMap'
 import { useParams } from 'react-router-dom'
 
 function ViewLokasi() {
@@ -158,35 +158,15 @@ function ViewLokasi() {
     setDetailLokasiData((prevData) => ({ ...prevData, [name]: value }))
   }
 
-  const searchBoxRef = useRef()
+  const mapCenter = [
+    detailLokasiData.latitude  || -6.2257128925342755,
+    detailLokasiData.longitude || 106.76117789050836,
+  ];
 
-  const onPlacesChanged = () => {
-    if (searchBoxRef.current) {
-      const places = searchBoxRef.current.getPlaces()
-      if (places && places.length > 0) {
-        const { lat, lng } = places[0].geometry.location
-        setDetailLokasiData({
-          ...detailLokasiData,
-          address: places[0].formatted_address,
-          latitude: parseFloat(lat()),
-          longitude: parseFloat(lng())
-        })
-      }
-    }
-  }
-
-  const mapStyle = {
-    width: '100%',
-    height: '300px',
-    borderRadius: '4px'
-  }
-
-  const center = {
-    lat: detailLokasiData.latitude || -6.2257128925342755,
-    lng: detailLokasiData.longitude || 106.76117789050836
-  }
-
-  const LIBRARIES = ['places'];
+  const mapMarkers =
+    detailLokasiData.latitude && detailLokasiData.longitude
+      ? [{ lat: detailLokasiData.latitude, lng: detailLokasiData.longitude }]
+      : [];
 
   return (
     <div className="relative h-full -z-10">
@@ -194,7 +174,6 @@ function ViewLokasi() {
       <div className={`px-[50px] py-[30px] ${showLoading ? 'hidden' : 'visible'}`}>
         <div className="p-8 bg-white rounded-lg">
           <h4>Informasi Lokasi</h4>
-          <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY} libraries={LIBRARIES}>
             <div className="pt-4">
               {!detailLokasiData.is_dc && (
                 <TextField
@@ -219,8 +198,7 @@ function ViewLokasi() {
                   disabled={true}
                 />
               )}
-              <StandaloneSearchBox onLoad={(ref) => (searchBoxRef.current = ref)} onPlacesChanged={onPlacesChanged}>
-                <TextField
+              <TextField
                   label="Alamat Lokasi"
                   disabled={true}
                   placeholder="Alamat Lokasi"
@@ -229,12 +207,14 @@ function ViewLokasi() {
                   value={detailLokasiData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
                 />
-              </StandaloneSearchBox>
 
-              <div className={`w-full h-full overflow-hidden p-2`}>
-                <GoogleMap mapContainerStyle={mapStyle} center={center} zoom={15}>
-                  {detailLokasiData.latitude && detailLokasiData.longitude && <Marker position={center} />}
-                </GoogleMap>
+              <div className={`w-full overflow-hidden p-2`} style={{ height: '300px' }}>
+                <GoogleMap
+                  center={mapCenter}
+                  zoom={15}
+                  height="300px"
+                  markers={mapMarkers}
+                />
               </div>
               <div className="flex">
                 <div className="w-[50%]">
@@ -365,7 +345,6 @@ function ViewLokasi() {
                 onChange={(e) => handleInputChange('service_time', e.target.value)}
               />
             </div>
-          </LoadScript>
         </div>
       </div>
     </div>

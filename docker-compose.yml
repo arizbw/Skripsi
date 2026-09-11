@@ -1,12 +1,11 @@
 networks:
   tms_net:
     name: tms_net
-  nginx-manager_customnetwork:
-    external: true
 
 volumes:
   db_data:
   storage_uploads:
+  rabbitmq_data:
 
 services:
   # API Gateway stack
@@ -15,11 +14,13 @@ services:
       stack: 8388608    
       nproc: 40960
     image: postgres:16
-    container_name: api_gateway_db
+    container_name: riim_logistics_db
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=paragon
+    ports:
+      - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
@@ -39,7 +40,7 @@ services:
       stack: 8388608    
       nproc: 40960
     image: rabbitmq:3.13-management
-    container_name: api_gateway_rabbitmq
+    container_name: riim_logistics_rabbitmq
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
@@ -48,7 +49,13 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+      start_period: 30s
     restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - tms_net
     security_opt:
@@ -65,14 +72,20 @@ services:
       dockerfile: Dockerfile
     pull_policy: build
     image: custom-opt-algorithm:local
-    container_name: opt-algorithm
+    container_name: riim_logistics_opt_algorithm
+    depends_on:
+      db:
+        condition: service_healthy
+      api_gateway:
+        condition: service_started
     environment:
       - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/paragon?schema=public
     restart: always
+    ports:
+      - "8001:8000"
     networks:
-      tms_net: {}
-      nginx-manager_customnetwork:
-        ipv4_address: 172.20.0.180
+      - tms_net
     security_opt:
       - seccomp=unconfined
 
@@ -87,7 +100,7 @@ services:
     image: custom-api-gateway:local
     ports:
       - "28080:8080"
-    container_name: api_gateway
+    container_name: riim_logistics_api_gateway
     depends_on:
       db:
         condition: service_healthy
@@ -107,11 +120,7 @@ services:
     restart: always
     command: sh -c "npx prisma migrate deploy && node index.js"
     networks:
-      tms_net: {}
-      nginx-manager_customnetwork:
-        ipv4_address: 172.20.0.161
-
-  
+      - tms_net
 
   # Storage service
   storage_service:
@@ -125,18 +134,14 @@ services:
     ports:
       - "18081:8081"
     image: custom-storage:local
-    container_name: storage_service
+    container_name: riim_logistics_storage_service
     volumes:
       - storage_uploads:/app/uploads
     environment:
       - STORAGE_API_KEY=${STORAGE_API_KEY}
     restart: always
     networks:
-      tms_net: {}
-      nginx-manager_customnetwork:
-        ipv4_address: 172.20.0.162
-
-  
+      - tms_net
 
   # Worker
   tmslastmile_worker:
@@ -148,7 +153,7 @@ services:
       dockerfile: Dockerfile
     pull_policy: build
     image: custom-tmslastmile-worker:local
-    container_name: tmslastmile_worker
+    container_name: riim_logistics_worker
     environment:
       - RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672/
       - EXCHANGE=box_exchange
@@ -170,8 +175,6 @@ services:
     security_opt:
       - seccomp=unconfined
 
-
-
   # Web Frontend
   web_frontend:
     ulimits:
@@ -184,17 +187,16 @@ services:
         REACT_APP_BACKEND_URL: ${REACT_APP_BACKEND_URL}
     pull_policy: build
     image: custom-web-frontend:local
-    container_name: web-frontend
+    container_name: riim_logistics_frontend
     ports:
       - "13000:3000"
     environment:
       - REACT_APP_GOOGLE_MAPS_KEY=${REACT_APP_GOOGLE_MAPS_KEY}
       - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
+      - REACT_APP_AI_URL=${REACT_APP_AI_URL}
     restart: always
     networks:
-      tms_net: {}
-      nginx-manager_customnetwork:
-        ipv4_address: 172.20.0.163
+      - tms_net
 
   ml_service:
     ulimits:
@@ -205,7 +207,7 @@ services:
       dockerfile: Dockerfile.gpu
     pull_policy: build
     image: custom-ml-service:local
-    container_name: ml_service
+    container_name: riim_logistics_ml_service
     profiles:
       - "ml"
     ports:
@@ -224,3 +226,23 @@ services:
       - tms_net
     security_opt:
       - seccomp=unconfined
+
+  ai-service:
+    ulimits:
+      stack: 8388608   
+      nproc: 40960
+    security_opt:
+      - seccomp=unconfined
+    build: ./ai-service
+    container_name: riim_logistics_ai_service
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./ai-service/.env
+    networks:
+      - tms_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - db
+    restart: always

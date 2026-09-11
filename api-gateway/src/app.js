@@ -11,12 +11,15 @@ export const app = express();
 
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => callback(null, true),
     credentials: true,
   })
 );
 
+app.options("*", cors());
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(logHttpRequest);
 

@@ -17,6 +17,9 @@ async function getAllDOsAdministrator(skip, limit) {
       loc_ori: true,
       loc_dest: true,
     },
+    orderBy: {
+      id: "desc",
+    },
   });
 
   return {
@@ -25,8 +28,11 @@ async function getAllDOsAdministrator(skip, limit) {
   };
 }
 
-async function getAllDOs(dc_id, skip, limit, start_date, end_date, status) {
-  const filters = [{ is_deleted: false }, { loc_ori: { dc_id: dc_id } }];
+async function getAllDOs(dc_id, skip, limit, start_date, end_date, status, customer_id, kabupaten_kota, so_origin, delivery_order_num) {
+  const filters = [{ is_deleted: false }];
+  if (dc_id != null) {
+    filters.push({ loc_ori: { dc_id: dc_id } });
+  }
 
   if (start_date != "" && end_date != "") {
     const startDateParts = start_date.split("/");
@@ -50,6 +56,43 @@ async function getAllDOs(dc_id, skip, limit, start_date, end_date, status) {
   if (status != null) {
     filters.push({
       status: status,
+    });
+  }
+
+  if (customer_id) {
+    filters.push({
+      loc_dest: {
+        customer_id: parseInt(customer_id)
+      }
+    });
+  }
+
+  if (kabupaten_kota) {
+    filters.push({
+      loc_dest: {
+        kabupaten_kota: {
+          contains: kabupaten_kota,
+          mode: 'insensitive'
+        }
+      }
+    });
+  }
+
+  if (so_origin) {
+    filters.push({
+      so_origin: {
+        contains: so_origin,
+        mode: 'insensitive'
+      }
+    });
+  }
+
+  if (delivery_order_num) {
+    filters.push({
+      delivery_order_num: {
+        contains: delivery_order_num,
+        mode: 'insensitive'
+      }
     });
   }
 
@@ -239,11 +282,13 @@ async function getAllDOsOptimization(
       loc_dest: {
         select: {
           id: true,
+          customer_id: true,
         },
       },
       loc_ori: {
         select: {
           id: true,
+          dc_id: true,
         },
       },
       ProductLine: {
@@ -287,6 +332,71 @@ async function getDeliveryOrdersByShipmentId(shipmentId) {
   });
 }
 
+async function createDO(doData, productLinesData, createdBy, dcId, customerId) {
+  return await prisma.$transaction(async (tx) => {
+    let locOriId = doData.loc_ori_id;
+    let locDestId = doData.loc_dest_id;
+
+    if (!locOriId && dcId) {
+      const locOri = await tx.location.findFirst({ where: { dc_id: parseInt(dcId), is_dc: true } });
+      if (locOri) locOriId = locOri.id;
+    }
+
+    if (!locDestId && customerId) {
+      const locDest = await tx.location.findFirst({ where: { customer_id: parseInt(customerId) } });
+      if (locDest) locDestId = locDest.id;
+    }
+
+    let totalVolume = 0;
+    let totalQuantity = 0;
+
+    for (const pl of productLinesData) {
+      totalVolume += pl.volume;
+      totalQuantity += pl.quantity;
+    }
+
+    const newDO = await tx.deliveryOrder.create({
+      data: {
+        ...doData,
+        loc_ori_id: locOriId,
+        loc_dest_id: locDestId,
+        volume: totalVolume,
+        quantity: totalQuantity,
+        created_by: createdBy,
+      },
+    });
+
+    const productLinesToInsert = productLinesData.map((pl) => ({
+      ...pl,
+      delivery_order_id: newDO.id,
+    }));
+
+    if (productLinesToInsert.length > 0) {
+      await tx.productLine.createMany({
+        data: productLinesToInsert,
+      });
+    }
+
+    return newDO;
+  });
+}
+
+async function updateDO(id, data, customerId) {
+  let locDestId = data.loc_dest_id;
+  if (!locDestId && customerId) {
+    const locDest = await prisma.location.findFirst({ where: { customer_id: parseInt(customerId) } });
+    if (locDest) locDestId = locDest.id;
+  }
+
+  const updateData = { ...data };
+  if (locDestId) updateData.loc_dest_id = locDestId;
+
+  return await prisma.deliveryOrder.update({
+    where: { id: parseInt(id) },
+    data: updateData,
+  });
+}
+
 export {
   getAllDOsAdministrator,
   getAllDOs,
@@ -296,4 +406,6 @@ export {
   countDeliveryOrder,
   countUnprocessedDO,
   getDeliveryOrdersByShipmentId,
+  createDO,
+  updateDO,
 };

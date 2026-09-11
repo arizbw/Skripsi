@@ -1,5 +1,5 @@
 import { HTTPResponse } from "../utils/response.js";
-import { priorityOptimizationService } from "../services/optimization-service.js";
+import { priorityOptimizationService, saveBulkShipmentService } from "../services/optimization-service.js";
 import { logger } from "../config/logging.js";
 
 const priorityOptimizationController = async (request, response, next) => {
@@ -74,4 +74,31 @@ const priorityOptimizationController = async (request, response, next) => {
   }
 };
 
-export { priorityOptimizationController };
+const bulkSaveShipmentController = async (request, response, next) => {
+  try {
+    const type = request.decodedToken.type;
+    const role = request.decodedToken.role;
+    if (role.is_allowed_shipment && type == "web") {
+      const { shipments, status } = await saveBulkShipmentService(request);
+      response
+        .status(status || 201)
+        .json(
+          HTTPResponse(
+            true,
+            status || 201,
+            "Success",
+            { shipments },
+            null
+          )
+        );
+    } else {
+      response
+        .status(401)
+        .json(HTTPResponse(false, 401, null, null, "Unauthorized Role"));
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+export { priorityOptimizationController, bulkSaveShipmentController };

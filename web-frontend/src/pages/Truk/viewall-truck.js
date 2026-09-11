@@ -3,12 +3,16 @@ import React, { useEffect, useState } from 'react'
 import { Loading } from '../../components/Loading'
 import axiosAuthInstance from '../../utils/axios-auth-instance'
 import jwtDecode from 'jwt-decode'
+import { Button } from '../../components/Button'
+import { BsCloudUpload } from 'react-icons/bs'
+import { useNavigate } from 'react-router-dom'
 
 function ViewAllTrucks() {
   const [dataTruk, setDataTruk] = useState([])
   const [showLoading, setShowLoading] = useState(true)
   const [userRole, setUserRole] = useState('')
   const [dataFetched, setDataFetched] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const tokenFromSession = sessionStorage.getItem('token')
@@ -91,7 +95,15 @@ function ViewAllTrucks() {
   return (
     <>
       <Loading visibility={showLoading} />
-      <div className={`px-[50px] py-[30px] ${showLoading ? 'hidden' : 'visible'}`}>
+      <div className={`px-[50px] py-[30px] flex flex-col ${showLoading ? 'hidden' : 'visible'}`}>
+        <div className="flex justify-end mb-4">
+          <Button
+            className="bg-white border text-[#1F54A3] hover:bg-neutral-10 border-[#1F54A3] px-4 py-2 rounded-[4px] text-[14px] font-[500]"
+            label="Unggah file"
+            icon={<BsCloudUpload size={16} />}
+            onClick={() => navigate('/truk/import')}
+          />
+        </div>
         <BaseTable columns={columns} data={dataTruk} dataLength={dataTruk.length} judul={`Daftar Truk`} />
       </div>
     </>

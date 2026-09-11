@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BsBusFront, BsHouse, BsBoxSeam, BsTruck, BsGeoAlt, BsChevronDown, BsCart, BsArrowLeft, BsPeople, BsPersonGear, BsClipboard, BsReceipt, BsBasket, BsUnion, BsPersonLinesFill } from 'react-icons/bs'
+import { BsBusFront, BsHouse, BsBoxSeam, BsTruck, BsGeoAlt, BsChevronDown, BsCart, BsArrowLeft, BsPeople, BsPersonGear, BsClipboard, BsReceipt, BsBasket, BsUnion, BsPersonLinesFill, BsRobot } from 'react-icons/bs'
 import { Modal } from './Modal'
+import AIChatbox from './chat'
 import axios from 'axios'
 import jwtDecode from 'jwt-decode'
 
@@ -11,6 +12,7 @@ export default function SidebarAdmin({ children, beranda, user, role, pengiriman
   let [modalKeluar, setModalKeluar] = useState(false)
   let [modalKeluarSukses, setModalKeluarSukses] = useState(false)
   let [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
   const [token, setToken] = useState(null)
   const [userEmail, setUserEmail] = useState('')
   const [username, setUsername] = useState('')
@@ -76,8 +78,8 @@ export default function SidebarAdmin({ children, beranda, user, role, pengiriman
 
       <Modal variant="danger" isOpen={modalKeluarSukses} closeModal={() => setModalKeluarSukses(false)} description="Anda telah keluar dari akun" rightButtonText="Selesai" />
 
-      <div className="flex">
-        <aside className="bg-primary h-screen">
+      <div className="flex h-screen overflow-hidden">
+        <aside className="bg-primary h-full w-[250px] flex-shrink-0 overflow-y-auto overflow-x-hidden scrollbar-hide">
           <div className="flex flex-col items-center justify-center w-[250px] h-[88px] px-4 space-y-5 drop-shadow-md">
             <div className="flex w-max space-x-2">
               <BsBusFront className="text-neutral-10" size={30} />
@@ -218,11 +220,19 @@ export default function SidebarAdmin({ children, beranda, user, role, pengiriman
           </div>
         </aside>
 
-        <main className="w-screen max-h-[100vh] overflow-auto">
+        <main className="flex-1 h-full overflow-y-auto">
           <div className="flex items-center justify-between px-[50px] drop-shadow-md bg-neutral-10 z-40 w-full">
             <h3>{title}</h3>
-            <div className=" space-y-2">
-              <div className="flex items-center  justify-between px-4 h-[88px] space-x-2 hover:bg-primary-surface hover:bg-opacity-25 hover:text-primary cursor-pointer" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+            <div className="flex items-center space-x-4">
+              <button 
+                onClick={() => setIsChatOpen(!isChatOpen)}
+                className="flex items-center justify-center p-2 text-neutral-80 hover:bg-neutral-20 rounded-full transition-colors"
+                title="Buka AI Assistant"
+              >
+                <BsRobot size={24} />
+              </button>
+              <div className=" space-y-2">
+                <div className="flex items-center  justify-between px-4 h-[88px] space-x-2 hover:bg-primary-surface hover:bg-opacity-25 hover:text-primary cursor-pointer" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
                 <p className="m-p-med">{userEmail}</p>
                 <BsChevronDown></BsChevronDown>
               </div>
@@ -236,10 +246,12 @@ export default function SidebarAdmin({ children, beranda, user, role, pengiriman
                 </div>
               )}
             </div>
+            </div>
           </div>
 
           {children}
         </main>
+        {isChatOpen && <AIChatbox onClose={() => setIsChatOpen(false)} />}
       </div>
     </div>
   )

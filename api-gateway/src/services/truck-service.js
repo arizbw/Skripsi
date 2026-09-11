@@ -2,6 +2,9 @@ import {
   getAllTruckAdmin,
   getAllTrucks,
   getTruckbyID,
+  getAllTruckTypes,
+  createTruck,
+  updateTruck,
 } from "../repositories/truck-repository.js";
 
 const getAllTruckAdminService = async () => {
@@ -21,4 +24,23 @@ const getTruckByIDService = async (request) => {
   return await getTruckbyID(request);
 };
 
-export { getAllTruckAdminService, getAllTrucksService, getTruckByIDService };
+const getAllTruckTypesService = async () => {
+  return await getAllTruckTypes();
+};
+
+const createTruckService = async (data) => {
+  return await createTruck(data);
+};
+
+const updateTruckService = async (id, data) => {
+  return await updateTruck(id, data);
+};
+
+export { 
+  getAllTruckAdminService, 
+  getAllTrucksService, 
+  getTruckByIDService,
+  getAllTruckTypesService,
+  createTruckService,
+  updateTruckService,
+};

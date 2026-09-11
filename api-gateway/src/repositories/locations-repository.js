@@ -14,6 +14,9 @@ async function getAllLocationsAdmin(skip, limit) {
       where: {
         is_deleted: false,
       },
+      orderBy: {
+        updated_at: 'desc'
+      },
       include: {
         ShipmentLocation: {
           include: {
@@ -79,6 +82,9 @@ const getAllLocations = async (dc_id, skip, limit) => {
       where: {
         AND: [dcIdQuery, { is_dc: false }],
         is_deleted: false,
+      },
+      orderBy: {
+        updated_at: 'desc'
       },
       include: {
         ShipmentLocation: {
@@ -171,10 +177,25 @@ const getLocationByListId = async (list_id) => {
   }
 };
 
+async function createLocation(data) {
+  return await prisma.location.create({
+    data: data,
+  });
+}
+
+async function updateLocation(id, data) {
+  return await prisma.location.update({
+    where: { id: id },
+    data: data,
+  });
+}
+
 export {
   getAllLocationsAdmin,
   getAllLocations,
   getLocationByID,
   getLocationByListId,
   getDCLocations,
+  createLocation,
+  updateLocation,
 };

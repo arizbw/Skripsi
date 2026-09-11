@@ -2,12 +2,12 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '../../../components/Button'
 import { Dropdown } from '../../../components/Dropdown'
 import { TextField } from '../../../components/TextField'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Loading } from '../../../components/Loading'
 import { Modal } from '../../../components/Modal'
 import { isAnyAttributeNull, checkAttributeNull } from '../../../utils/utils'
 import axiosAuthInstance from '../../../utils/axios-auth-instance'
-import { GoogleMap, LoadScript, Marker, StandaloneSearchBox } from '@react-google-maps/api'
+import GoogleMap from '../../../components/GoogleMap'
 import axios from 'axios'
 import { v4 as uuidv4 } from 'uuid'
 import { useParams } from 'react-router-dom'
@@ -205,35 +205,14 @@ function ViewLokasiAdmin() {
   }
 
   //Init Maps
-  const [mapRef, setMapRef] = useState(null)
-  const searchBoxRef = useRef()
-
-  const onPlacesChanged = () => {
-    if (searchBoxRef.current) {
-      const places = searchBoxRef.current.getPlaces()
-
-      if (places && places.length > 0) {
-        const { lat, lng } = places[0].geometry.location
-        setDetailLokasiData({
-          ...detailLokasiData,
-          address: places[0].formatted_address,
-          latitude: parseFloat(lat()),
-          longitude: parseFloat(lng())
-        })
-      }
-    }
-  }
-
-  const mapStyle = {
-    width: '100%',
-    height: '300px',
-    borderRadius: '4px'
-  }
-
-  const center = {
-    lat: detailLokasiData.latitude || -6.2257128925342755,
-    lng: detailLokasiData.longitude || 106.76117789050836
-  }
+  const mapCenter = [
+    detailLokasiData.latitude  || -6.2257128925342755,
+    detailLokasiData.longitude || 106.76117789050836,
+  ];
+  const mapMarkers =
+    detailLokasiData.latitude && detailLokasiData.longitude
+      ? [{ lat: detailLokasiData.latitude, lng: detailLokasiData.longitude }]
+      : [];
 
   return (
     <div className="relative h-full -z-10">
@@ -246,21 +225,19 @@ function ViewLokasiAdmin() {
       <div className={`px-[50px] py-[30px] ${showLoading ? 'hidden' : 'visible'}`}>
         <div className="p-8 bg-white rounded-lg">
           <h4>Informasi Lokasi</h4>
-          <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY} libraries={['places']}>
-            <div className="pt-4">
+          <div className="pt-4">
               <TextField label="Nama Lokasi" disabled={true} placeholder="Nama Lokasi" required={true} className="w-full" value={detailLokasiData.name} onChange={(e) => handleInputChange('name', e.target.value)} isError={isError && checkAttributeNull(detailLokasiData.name)} />
               {!detailLokasiData.is_dc && <TextField label="Nama Customer" disabled={true} placeholder="Nama Customer" required={true} className="w-full" value={detailLokasiData.customer_name} onChange={(e) => handleInputChange('dc', e.target.value)} isError={isError && checkAttributeNull(detailLokasiData.customer_name)} />}
               {!detailLokasiData.is_dc && <Dropdown placeholder="Contoh: Jakarta Timur" label="Distribution Center (DC) " data={dataDC} className="w-full min-h-[40px]" required={true} value={dcDropdown} onChange={handleDCDropdownChange} isError={isError && checkAttributeNull(dcDropdown)} disabled={true} />}
-              {/* {dc_ID !== 'null' ? <Dropdown placeholder="Contoh: Jakarta Timur" label="Distribution Center (DC) " data={dataDC} className="w-full min-h-[40px] text-neutral-60" required={true} value={dcDropdown} onChange={handleDCDropdownChange} isError={isError && checkAttributeNull(dcDropdown)} disabled={true} /> : userRole === 'Super' ? <Dropdown placeholder="Contoh: Jakarta Timur" label="Distribution Center (DC) " data={dataDC} className="w-full min-h-[40px]" required={true} value={dcDropdown} onChange={handleDCDropdownChange} isError={isError && checkAttributeNull(dcDropdown)} /> : null} */}
-              {/* <Dropdown placeholder="Contoh: Jakarta Timur" label="Distribution Center (DC) " data={dataDC} className="w-full min-h-[40px]" required={true} value={dcDropdown} onChange={handleDCDropdownChange} isError={isError && checkAttributeNull(dcDropdown)} disabled={true} /> */}
-              <StandaloneSearchBox onLoad={(ref) => (searchBoxRef.current = ref)} onPlacesChanged={onPlacesChanged}>
-                <TextField label="Alamat Lokasi" disabled={true} placeholder="Alamat Lokasi" required={true} className="w-full" value={detailLokasiData.address} onChange={(e) => handleInputChange('address', e.target.value)} isError={isError && checkAttributeNull(detailLokasiData.address)} />
-              </StandaloneSearchBox>
+              <TextField label="Alamat Lokasi" disabled={true} placeholder="Alamat Lokasi" required={true} className="w-full" value={detailLokasiData.address} onChange={(e) => handleInputChange('address', e.target.value)} isError={isError && checkAttributeNull(detailLokasiData.address)} />
 
-              <div className={`w-full h-full overflow-hidden p-2`}>
-                <GoogleMap ref={setMapRef} mapContainerStyle={mapStyle} center={center} zoom={15}>
-                  {detailLokasiData.latitude && detailLokasiData.longitude && <Marker position={center} />}
-                </GoogleMap>
+              <div className={`w-full overflow-hidden p-2`} style={{ height: '300px' }}>
+                <GoogleMap
+                  center={mapCenter}
+                  zoom={15}
+                  height="300px"
+                  markers={mapMarkers}
+                />
               </div>
               <div className="flex">
                 <div className="w-[50%]">
@@ -309,7 +286,6 @@ function ViewLokasiAdmin() {
 
               <TextField label="Service Time Saat Ini" disabled={true} placeholder="Contoh: 15" type="number" className="w-full" value={detailLokasiData.service_time} onChange={(e) => handleInputChange('service_time', e.target.value)} />
             </div>
-          </LoadScript>
         </div>
 
         {/* <div className="flex justify-center gap-4 pt-4">

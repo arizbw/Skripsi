@@ -3,6 +3,9 @@ import React, { useEffect, useState } from 'react'
 import { Loading } from '../../components/Loading'
 import axiosAuthInstance from '../../utils/axios-auth-instance'
 import { BaseTablePagination } from '../../components/BaseTablePagination'
+import { Button } from '../../components/Button'
+import { BsPlusLg } from 'react-icons/bs'
+import { useNavigate } from 'react-router-dom'
 
 function ViewAllDo() {
   const [dataDO, setDataDO] = useState([])
@@ -10,6 +13,7 @@ function ViewAllDo() {
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(5)
   const [totalPages, setTotalPages] = useState(0)
+  const navigate = useNavigate()
   
   const fetchDO = async (page, limit) => {
     
@@ -42,6 +46,11 @@ function ViewAllDo() {
     setPageSize(size)
     setCurrentPage(1)
   }
+
+  const handleEditDO = (id) => {
+    navigate(`/delivery-orders/edit/${id}`)
+  }
+
   const columns = React.useMemo(
     () => [
       {
@@ -92,8 +101,30 @@ function ViewAllDo() {
   return (
     <>
       <Loading visibility={showLoading} />
-      <div className={`px-[50px] py-[30px] ${showLoading ? 'hidden' : 'visible'}`}>
-        <BaseTablePagination columns={columns} data={dataDO} currentPage={currentPage} totalPages={totalPages} pageSize={pageSize} onPageChange={handlePageChange} onPageSizeChange={handlePageSizeChange} loading={showLoading} judul={'Daftar Delivery Order'} />
+      <div className={`px-[50px] py-[30px] flex flex-col ${showLoading ? 'hidden' : 'visible'}`}>
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex space-x-3">
+            <Button
+              className="bg-[#1F54A3] text-white hover:bg-[#184481] px-4 py-2 rounded-[4px] text-[14px] font-[500]"
+              label="Buat Order"
+              onClick={() => navigate('/delivery-orders/create')}
+              icon={<BsPlusLg size={14} />}
+            />
+          </div>
+        </div>
+        <BaseTablePagination 
+          columns={columns} 
+          data={dataDO} 
+          currentPage={currentPage} 
+          totalPages={totalPages} 
+          pageSize={pageSize} 
+          onPageChange={handlePageChange} 
+          onPageSizeChange={handlePageSizeChange} 
+          loading={showLoading} 
+          judul="Delivery Order"
+          showEdit={true}
+          onEdit={handleEditDO}
+        />
       </div>
     </>
   )

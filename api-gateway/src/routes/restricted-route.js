@@ -5,16 +5,23 @@ import {
   getAllDOAdminController,
   getAllDOController,
   getDOByIDController,
+  createDOController,
+  updateDOController,
 } from "../controllers/delivery-order-controller.js"; //DO
 import {
   getAllLocationsAdminController,
   getAllLocationsController,
   getLocationByIdController,
+  createLocationController,
+  updateLocationController,
 } from "../controllers/location-controller.js"; //LOCATION
 import {
   getAllTruckAdminController,
   getAllTrucksController,
   getTruckByIDController,
+  createTruckController,
+  updateTruckController,
+  getAllTruckTypesController,
 } from "../controllers/truck-controller.js"; //TRUCK
 import { getAllRoleController } from "../controllers/role-controller.js"; //ROLE
 import { getAllDCController } from "../controllers/dc-controller.js"; //DC
@@ -35,7 +42,7 @@ import {
   getAllCustomersController,
   getCustomerByIdController,
 } from "../controllers/customers-controller.js"; //CUSTOMER
-import { priorityOptimizationController } from "../controllers/optimization-controller.js"; //OPTIMIZATION
+import { priorityOptimizationController, bulkSaveShipmentController } from "../controllers/optimization-controller.js"; //OPTIMIZATION
 import {
   addBoxToDOController,
   boxDimensionCalculation,
@@ -44,9 +51,23 @@ import {
   getAllBoxesController,
   createBoxController,
 } from "../controllers/box-controller.js"; // BOX
+import {
+  getChatHistoryController,
+  saveChatMessagesController,
+  getChatSessionsController,
+  createChatSessionController,
+  deleteChatSessionController,
+} from "../controllers/chat-history-controller.js"; // CHAT HISTORY
 
 const restrictedRouter = express.Router();
 restrictedRouter.use(jwtMiddleware);
+
+// chat history
+restrictedRouter.get("/api/v1/chat-history", getChatHistoryController);
+restrictedRouter.post("/api/v1/chat-messages", saveChatMessagesController);
+restrictedRouter.get("/api/v1/chat-sessions", getChatSessionsController);
+restrictedRouter.post("/api/v1/chat-sessions", createChatSessionController);
+restrictedRouter.delete("/api/v1/chat-sessions/:sessionId", deleteChatSessionController);
 
 //user
 /**
@@ -306,6 +327,22 @@ restrictedRouter.get("/api/v1/delivery-orders", getAllDOController);
 
 /**
  * @swagger
+ * /api/v1/delivery-orders:
+ *   post:
+ *     summary: Create a new delivery order
+ *     tags: [Delivery Order]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: Delivery Order Created
+ *       401:
+ *         description: Unauthorized
+ */
+restrictedRouter.post("/api/v1/delivery-orders", createDOController);
+
+/**
+ * @swagger
  * /api/v1/delivery-order/{doId}:
  *   get:
  *     summary: Get delivery order by ID
@@ -326,6 +363,7 @@ restrictedRouter.get("/api/v1/delivery-orders", getAllDOController);
  *         description: Delivery order not found
  */
 restrictedRouter.get("/api/v1/delivery-order/:doId", getDOByIDController);
+restrictedRouter.put("/api/v1/delivery-orders/:doId", updateDOController);
 
 //locations
 /**
@@ -382,6 +420,38 @@ restrictedRouter.get("/api/v1/locations", getAllLocationsController);
  */
 restrictedRouter.get("/api/v1/location/:lokasiId", getLocationByIdController);
 
+/**
+ * @swagger
+ * /api/v1/location:
+ *   post:
+ *     summary: Add a new location (Admin)
+ *     tags: [Location]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: Location created successfully
+ *       401:
+ *         description: Unauthorized
+ */
+restrictedRouter.post("/api/v1/location", createLocationController);
+
+/**
+ * @swagger
+ * /api/v1/location:
+ *   put:
+ *     summary: Update an existing location (Admin)
+ *     tags: [Location]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Location updated successfully
+ *       401:
+ *         description: Unauthorized
+ */
+restrictedRouter.put("/api/v1/location", updateLocationController);
+
 //trucks
 /**
  * @swagger
@@ -436,6 +506,52 @@ restrictedRouter.get("/api/v1/trucks", getAllTrucksController);
  *         description: Truck not found
  */
 restrictedRouter.get("/api/v1/truck/:truckId", getTruckByIDController);
+
+/**
+ * @swagger
+ * /api/v1/truck-types:
+ *   get:
+ *     summary: Get all truck types
+ *     tags: [Truck]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of truck types
+ */
+restrictedRouter.get("/api/v1/truck-types", getAllTruckTypesController);
+
+/**
+ * @swagger
+ * /api/v1/truck:
+ *   post:
+ *     summary: Add a new truck (Admin)
+ *     tags: [Truck]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: Truck created successfully
+ */
+restrictedRouter.post("/api/v1/truck", createTruckController);
+
+/**
+ * @swagger
+ * /api/v1/truck:
+ *   put:
+ *     summary: Update an existing truck
+ *     tags: [Truck]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Truck updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Truck not found
+ */
+restrictedRouter.put("/api/v1/truck", updateTruckController);
 
 //roles
 /**
@@ -729,9 +845,8 @@ restrictedRouter.patch(
  *       401:
  *         description: Unauthorized
  */
-restrictedRouter.post("/api/v1/priority-opt", priorityOptimizationController
-
-);
+restrictedRouter.post("/api/v1/priority-opt", priorityOptimizationController);
+restrictedRouter.post("/api/v1/priority-opt/bulk-save", bulkSaveShipmentController);
 
 /**
  * @swagger

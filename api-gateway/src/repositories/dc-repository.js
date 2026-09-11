@@ -13,7 +13,7 @@ async function getAllDC() {
       updated_at: "desc",
     },
   });
-  return { dcs: result };
+  return result;
 }
 
 async function getDCbyID(id) {

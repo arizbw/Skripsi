@@ -204,6 +204,7 @@ export function ActionButtons({ value, createCluster = false, viewPengiriman = f
   const navigate = useNavigate()
   const [page, setPage] = useState()
   const [id, setId] = useState(null)
+  const userRole = localStorage.getItem('userRole')
 
   const [isOpenDetail, setIsOpenDetail] = useState(false)
   const [openUpdate, setOpenUpdate] = useState(false)
@@ -536,6 +537,8 @@ export function ActionButtons({ value, createCluster = false, viewPengiriman = f
               }
             />
             {page === 'Order' && (orderData.manifest === null || (orderData.manifest && orderData.manifest.status !== 'DIBATALKAN')) && viewPengiriman === true ? <BsPencilSquare className="cursor-pointer" title={`Move ${page}`} onClick={() => setIsOpenMoveTruck(true)} /> : null}
+            {page === 'Truk' ? <BsPencilSquare className="cursor-pointer" title={`Edit ${page}`} onClick={() => navigate(userRole === 'Super' ? '/administrator/truk/update' : '/truk/update', { state: { Id: id } })} /> : null}
+            {page === 'Lokasi' ? <BsPencilSquare className="cursor-pointer" title={`Edit ${page}`} onClick={() => navigate(userRole === 'Super' ? '/administrator/lokasi/update' : '/lokasi/update', { state: { Id: id } })} /> : null}
           </>
         ) : null}
         {/* {

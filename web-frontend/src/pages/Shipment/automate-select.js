@@ -6,6 +6,7 @@ import { SelectColumnFilter } from '../../components/BaseTable'
 import React, { useEffect, useState } from 'react'
 import { FaCalendarAlt, FaClipboard } from 'react-icons/fa'
 import { Loading } from '../../components/Loading'
+import { Modal } from '../../components/Modal'
 import jwtDecode from 'jwt-decode'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -26,6 +27,7 @@ function DoSelectAutomate() {
   const [totalData, setTotalData] = useState(0)
   const [dataDO, setDataDO] = useState([])
   const [dc_id, setDcId] = useState("")
+  const [isOpenError, setIsOpenError] = useState(false)
 
   const fetchDO = async (page, limit, start_date, end_date) => {
     try {
@@ -71,6 +73,7 @@ function DoSelectAutomate() {
       navigate('/pengiriman/otomatisasi');
     } catch (error) {
       console.error('Gagal membuat pengiriman:', error.response?.data?.message || error.message);
+      setIsOpenError(true)
     } finally {
       setShowLoading(false)
       setLoadingMessage(null)
@@ -164,6 +167,14 @@ function DoSelectAutomate() {
   return (
     <>
       <Loading visibility={showLoading} message={loadingMessage} />
+      <Modal
+        variant="danger"
+        isOpen={isOpenError}
+        closeModal={() => setIsOpenError(false)}
+        title="Terjadi Kesalahan"
+        description="Mohon coba lagi."
+        rightButtonText="Tutup"
+      />
       <div className={`w-full mx-auto space-y-5 mt-4 pt-10 px-10 ${showLoading ? 'hidden' : 'visible'}`}>
         <div className="w-full bg-white border rounded-lg shadow-md">
           <div className="bg-primary-hover text-white px-4 py-3 rounded-t-lg">

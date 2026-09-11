@@ -1,22 +1,20 @@
 import { prisma } from "../config/database.js";
-import {
-  user,
-  dclocations,
-  dcs,
-  truck,
-  role,
-  truck_types,
-} from "./dataset/static-data.js";
+import { role } from "./dataset/static-data/role-data.js";
+import { truck_types } from "./dataset/static-data/truck-type-data.js";
+import { truck } from "./dataset/static-data/truck-data.js";
+import { dcs } from "./dataset/static-data/dc-data.js";
+import { user } from "./dataset/static-data/user-data.js";
+import { dclocations } from "./dataset/static-data/dc-location-data.js";
 import {
   customer_location_banten,
   customer_location_jakarta,
   customer_data,
 } from "./dataset/customer-data.js";
-import { product_data } from "./dataset/product-dummy-data.js";
+import { product_data } from "./dataset/product-data.js";
 import {
   delivery_order_banten,
   delivery_order_jakarta,
-} from "./dataset/data-do.js";
+} from "./dataset/do-data.js";
 
 function getRandomFloat(min, max) {
   return (Math.random() * (max - min) + min).toFixed(2);
@@ -76,6 +74,7 @@ export async function intialData() {
     await prisma.location.create({
       data: {
         id: customer_loc_jkt.id,
+        name: customer_loc_jkt.name,
         latitude: customer_loc_jkt.latitude,
         longitude: customer_loc_jkt.longitude,
         address: customer_loc_jkt.address,
@@ -112,6 +111,7 @@ export async function intialData() {
     await prisma.location.create({
       data: {
         id: customer_loc_btn.id,
+        name: customer_loc_btn.name,
         latitude: customer_loc_btn.latitude,
         longitude: customer_loc_btn.longitude,
         address: customer_loc_btn.address,

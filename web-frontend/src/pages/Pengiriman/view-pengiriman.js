@@ -5,9 +5,9 @@ import axiosAuthInstance from "../../utils/axios-auth-instance";
 import { TrukPercentage } from "../../components/TrukPercentage";
 import { Tab } from '@headlessui/react'
 import { classNames, formatEta, formatTravelDistance, formatTravelTime } from "../../utils/utils";
-import { GoogleMap, LoadScript, Polyline, Marker, InfoWindow } from "@react-google-maps/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BsInfoCircle } from "react-icons/bs";
+import GoogleMap from "../../components/GoogleMap";
 
 function ViewPengiriman() {
     const location = useLocation();
@@ -167,23 +167,14 @@ function ViewPengiriman() {
     );
 
     //init maps
-    const [selectedMarker, setSelectedMarker] = useState();
-    const [selectedTrukMarker, setSelectedTrukMarker] = useState();
-    const [selectedDCMarker, setSelectedDCMarker] = useState(false);    
     const [mapKey, setMapKey] = useState(Date.now());
     const mapStyles = {
         height: "100%",
         width: "100%",
     };
-    const mapOptions = {
-        streetViewControl: false,
-    };
 
     const changeTab = () => {
         setMapKey(Date.now());
-        setSelectedTrukMarker()
-        setSelectedDCMarker()
-        setSelectedMarker()
     };
 
     return (
@@ -310,75 +301,46 @@ function ViewPengiriman() {
                                                     </p>
                                                     <div className="grid grid-cols-5 max-h-[400px] pb-[30px]">
                                                         <div className='col-span-3 text-left p-2'>
-                                                            <LoadScript 
-                                                                googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY}
-                                                            >
-                                                                <div className={`w-full h-full overflow-hidden p-2`}>
-                                                                    <GoogleMap
-                                                                        key={mapKey}
-                                                                        mapContainerStyle={mapStyles}
-                                                                        options={mapOptions}
-                                                                        zoom={10}
-                                                                        center={{ lat: manifest.all_coords[0][0], lng: manifest.all_coords[0][1] }}
-                                                                        >
-                                                                            <Polyline
-                                                                                path={manifest.all_coords.map(coord => ({ lat: coord[0], lng: coord[1] }))}
-                                                                                options={{
-                                                                                    strokeColor: "#FF0000",
-                                                                                    strokeOpacity: 0.8,
-                                                                                    strokeWeight: 2,
-                                                                                    fillColor: "#FF0000",
-                                                                                    fillOpacity: 0.35,
-                                                                                }}
-                                                                            />
-                                                                            <Marker
-                                                                                key={0}
-                                                                                position={{ lat: manifest.all_coords[0][0], lng: manifest.all_coords[0][1] }}
-                                                                                onClick={() => {
-                                                                                    setSelectedDCMarker(!selectedDCMarker)
-                                                                                    setSelectedTrukMarker(manifest.id)
-                                                                                }}
-                                                                                icon={{
-                                                                                    url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-                                                                                }}
-                                                                            >
-                                                                                {selectedDCMarker && selectedTrukMarker == manifest.id && (
-                                                                                    <InfoWindow onCloseClick={() => setSelectedDCMarker(!selectedDCMarker)}>
-                                                                                        <div>
-                                                                                            <p>Stop 0</p>
-                                                                                            <p>DC Banten</p>
-                                                                                        </div>
-                                                                                    </InfoWindow>
-                                                                                )}
-                                                                            </Marker>
-                                                                            {
-                                                                                manifest.manifestLocations.map((location, index) => (
-                                                                                    <Marker
-                                                                                        key={index}
-                                                                                        position={{ lat: location.location.latitude, lng: location.location.longitude }}
-                                                                                        onClick={() => {
-                                                                                            setSelectedTrukMarker(manifest.id)
-                                                                                            setSelectedMarker(location.location)}
-                                                                                        }
-                                                                                    >
-                                                                                        {selectedMarker && selectedTrukMarker == manifest.id && selectedMarker.latitude === location.location.latitude && selectedMarker.longitude === location.location.longitude && (
-                                                                                            <InfoWindow onCloseClick={() => {
-                                                                                                setSelectedTrukMarker(null)
-                                                                                                setSelectedMarker(null)
-                                                                                            }}>
-                                                                                                <div>
-                                                                                                    <p>Stop {index + 1}</p>
-                                                                                                    <p>{location.location.name}</p>
-                                                                                                    <p>{location.location.address}</p>
-                                                                                                </div>
-                                                                                            </InfoWindow>
-                                                                                        )}
-                                                                                    </Marker>
-                                                                                ))
-                                                                            }
-                                                                    </GoogleMap>
-                                                                </div>
-                                                            </LoadScript>
+                                                            {
+                                                                (() => {
+                                                                    const coords = manifest.all_coords;
+                                                                    const manifestCenter = [coords[0][0], coords[0][1]];
+                                                                    const manifestPolyline = coords;
+                                                                    const manifestMarkers = [
+                                                                        {
+                                                                            lat: coords[0][0],
+                                                                            lng: coords[0][1],
+                                                                            color: 'green',
+                                                                            popup: (
+                                                                                <div><p><b>Stop 0</b></p><p>{dataPengiriman.dc?.name || 'DC Banten'}</p></div>
+                                                                            ),
+                                                                        },
+                                                                        ...manifest.manifestLocations.map((loc, index) => ({
+                                                                            lat: loc.location.latitude,
+                                                                            lng: loc.location.longitude,
+                                                                            label: index + 1,
+                                                                            popup: (
+                                                                                <div>
+                                                                                    <p><b>Stop {index + 1}</b></p>
+                                                                                    <p>{loc.location.name}</p>
+                                                                                    <p>{loc.location.address}</p>
+                                                                                </div>
+                                                                            ),
+                                                                        })),
+                                                                    ];
+                                                                    return (
+                                                                        <GoogleMap
+                                                                            center={manifestCenter}
+                                                                            zoom={10}
+                                                                            height="360px"
+                                                                            polyline={manifestPolyline}
+                                                                            polylineColor="#FF0000"
+                                                                            markers={manifestMarkers}
+                                                                            mapKey={mapKey}
+                                                                        />
+                                                                    );
+                                                                })()
+                                                            }
                                                         </div>
                                                         <div className='col-span-2 text-left p-2'>
                                                             <div className="max-h-[300px] overflow-y-auto border rounded-md">

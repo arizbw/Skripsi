@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TextField } from "../components/TextField";
-import {Modal, ModalMoveOrder} from "../components/Modal";
+import { Modal } from "../components/Modal";
 import { Dropdown, MultipleDropdown } from "../components/Dropdown";
 import { Toggle } from "../components/Switch";
 import BaseTable, { SelectColumnFilter, StatusPill, ActionButtons } from "../components/BaseTable";

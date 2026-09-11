@@ -2,6 +2,7 @@ import React from 'react';
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BsBusFront,BsFillEyeFill,BsFillEyeSlashFill,BsExclamationCircle } from "react-icons/bs";
+import jwt_decode from 'jwt-decode';
 import { Button } from '../../components/Button';
 import axios from 'axios';
 
@@ -46,11 +47,19 @@ const Login = () => {
 
             const response = await axios.post("/login", userData);
             if(response.status === 200){
-                axios.defaults.headers.common['Authorization'] = "Bearer " + response.data.data.token;
-                sessionStorage.setItem("token", response.data.data.token)
+                const token = response.data.data.token;
+                axios.defaults.headers.common['Authorization'] = "Bearer " + token;
+                
+                const decodedToken = jwt_decode(token);
+                localStorage.setItem("userRole", decodedToken.role ? decodedToken.role.name : "null");
+                localStorage.setItem("dcId", decodedToken.role ? decodedToken.role.dc_id : "null");
+                
+                sessionStorage.setItem("token", token)
+                // Generate session_id unik per login agar history chat AI selalu bersih saat login baru
+                const userId = decodedToken.id || decodedToken.sub || decodedToken.user_id || username;
+                sessionStorage.setItem("session_id", `user_${userId}_${Date.now()}`)
                 navigate("/")
                 window.location.reload();
-    
             }
             setShowLoading(false);
         } catch (error) {

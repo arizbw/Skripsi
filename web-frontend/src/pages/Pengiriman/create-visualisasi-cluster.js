@@ -4,7 +4,7 @@ import { Loading } from "../../components/Loading";
 import Button from "../../components/Button";
 import axiosAuthInstance from "../../utils/axios-auth-instance";
 import { TrukPercentage } from "../../components/TrukPercentage";
-import { GoogleMap, LoadScript, Polyline, Marker, InfoWindow } from "@react-google-maps/api";
+import GoogleMap from "../../components/GoogleMap";
 import { Tab } from '@headlessui/react';
 import { classNames } from "../../utils/utils";
 import BaseTable, { SelectColumnFilter } from "../../components/BaseTable";
@@ -115,23 +115,14 @@ function CreatePengirimanVisualisasiCluster() {
       );
 
     //init maps
-    const [selectedMarker, setSelectedMarker] = useState();
-    const [selectedClusterMarker, setSelectedClusterMarker] = useState();
-    const [selectedDCMarker, setSelectedDCMarker] = useState(false);    
     const [mapKey, setMapKey] = useState(Date.now());
     const mapStyles = {
         height: "100%",
         width: "100%",
     };
-    const mapOptions = {
-        streetViewControl: false,
-    };
 
     const changeTab = () => {
         setMapKey(Date.now());
-        setSelectedClusterMarker()
-        setSelectedDCMarker()
-        setSelectedMarker()
     };
 
     const createPengiriman = async (e) => {
@@ -249,77 +240,47 @@ function CreatePengirimanVisualisasiCluster() {
                                                     <TrukPercentage max_volume={nonNegativeOneClusters[key].max_capacity} total_volume={nonNegativeOneClusters[key].current_capacity}/>
                                                     {/* <TrukPercentage percentage={Math.ceil((nonNegativeOneClusters[key].current_capacity / nonNegativeOneClusters[key].max_capacity) * 100)} /> */}
                                                 </div>
-                                                {/* <div className='col-span-1 text-right m-p-reg p-2'> */}
                                                 <div className='flex-1 m-p-reg pl-10'>
-                                                    <LoadScript 
-                                                        googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY}
-                                                    >
-                                                        <div className={`w-full h-full overflow-hidden p-2`}>
-                                                            <GoogleMap
-                                                                key={mapKey}
-                                                                mapContainerStyle={mapStyles}
-                                                                options={mapOptions}
-                                                                zoom={10}
-                                                                center={{ lat: nonNegativeOneClusters[key].all_coords[0][0], lng: nonNegativeOneClusters[key].all_coords[0][1] }}
-                                                                >
-                                                                    <Polyline
-                                                                        path={nonNegativeOneClusters[key].all_coords.map(coord => ({ lat: coord[0], lng: coord[1] }))}
-                                                                        options={{
-                                                                            strokeColor: "#FF0000",
-                                                                            strokeOpacity: 0.8,
-                                                                            strokeWeight: 2,
-                                                                            fillColor: "#FF0000",
-                                                                            fillOpacity: 0.35,
-                                                                        }}
-                                                                    />
-                                                                    <Marker
-                                                                        key={0}
-                                                                        position={{ lat: nonNegativeOneClusters[key].all_coords[0][0], lng: nonNegativeOneClusters[key].all_coords[0][1] }}
-                                                                        onClick={() => {
-                                                                            setSelectedDCMarker(!selectedDCMarker)
-                                                                            setSelectedClusterMarker(key)
-                                                                        }}
-                                                                        icon={{
-                                                                            url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-                                                                        }}
-                                                                    >
-                                                                        {selectedDCMarker && selectedClusterMarker == key && (
-                                                                            <InfoWindow onCloseClick={() => setSelectedDCMarker(!selectedDCMarker)}>
-                                                                                <div>
-                                                                                    <p>Stop 0</p>
-                                                                                    <p>DC Banten</p>
-                                                                                </div>
-                                                                            </InfoWindow>
-                                                                        )}
-                                                                    </Marker>
-                                                                    {
-                                                                        nonNegativeOneClusters[key].location_routes.map((location, index) => (
-                                                                            <Marker
-                                                                                key={index}
-                                                                                position={{ lat: location.latitude, lng: location.longitude }}
-                                                                                onClick={() => {
-                                                                                    setSelectedClusterMarker(key)
-                                                                                    setSelectedMarker(location)}
-                                                                                }
-                                                                            >
-                                                                                {selectedMarker && selectedClusterMarker == key && selectedMarker.latitude === location.latitude && selectedMarker.longitude === location.longitude && (
-                                                                                    <InfoWindow onCloseClick={() => {
-                                                                                        setSelectedClusterMarker(null)
-                                                                                        setSelectedMarker(null)
-                                                                                    }}>
-                                                                                        <div>
-                                                                                            <p>Stop {index + 1}</p>
-                                                                                            <p>{location.name}</p>
-                                                                                            <p>{location.address}</p>
-                                                                                        </div>
-                                                                                    </InfoWindow>
-                                                                                )}
-                                                                            </Marker>
-                                                                        ))
-                                                                    }
-                                                            </GoogleMap>
-                                                        </div>
-                                                    </LoadScript>
+                                                    {
+                                                        (() => {
+                                                            const coords = nonNegativeOneClusters[key].all_coords;
+                                                            const clusterCenter = [coords[0][0], coords[0][1]];
+                                                            const clusterPolyline = coords;
+                                                            const clusterMarkers = [
+                                                                {
+                                                                    lat: coords[0][0],
+                                                                    lng: coords[0][1],
+                                                                    color: 'green',
+                                                                    popup: (
+                                                                        <div><p><b>Stop 0</b></p><p>DC Banten</p></div>
+                                                                    ),
+                                                                },
+                                                                ...nonNegativeOneClusters[key].location_routes.map((location, index) => ({
+                                                                    lat: location.latitude,
+                                                                    lng: location.longitude,
+                                                                    label: index + 1,
+                                                                    popup: (
+                                                                        <div>
+                                                                            <p><b>Stop {index + 1}</b></p>
+                                                                            <p>{location.name}</p>
+                                                                            <p>{location.address}</p>
+                                                                        </div>
+                                                                    ),
+                                                                })),
+                                                            ];
+                                                            return (
+                                                                <GoogleMap
+                                                                    center={clusterCenter}
+                                                                    zoom={10}
+                                                                    height="400px"
+                                                                    polyline={clusterPolyline}
+                                                                    polylineColor="#FF0000"
+                                                                    markers={clusterMarkers}
+                                                                    mapKey={mapKey}
+                                                                />
+                                                            );
+                                                        })()
+                                                    }
                                                 </div>
                                             </div>
                                             <div className="pt-8">

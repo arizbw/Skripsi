@@ -192,6 +192,23 @@ async function countAvailableTruck(dc_id) {
   });
 }
 
+async function getAllTruckTypes() {
+  return await prisma.truckType.findMany();
+}
+
+async function createTruck(data) {
+  return await prisma.truck.create({
+    data: data
+  });
+}
+
+async function updateTruck(id, data) {
+  return await prisma.truck.update({
+    where: { id: parseInt(id) },
+    data: data
+  });
+}
+
 export {
   getAllTruckAdmin,
   getAllTrucks,
@@ -200,4 +217,7 @@ export {
   getCostId,
   countTruck,
   countAvailableTruck,
+  getAllTruckTypes,
+  createTruck,
+  updateTruck,
 };

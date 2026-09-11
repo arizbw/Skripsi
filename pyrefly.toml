@@ -1,0 +1,14 @@
+project-includes = [
+    "**/*.py*",
+    "**/*.ipynb",
+]
+
+search-path = [
+    "ai-service",
+    "machine-learning",
+    "opt-algorithm",
+    "tmslastmile-worker",
+    "experiment",
+]
+
+

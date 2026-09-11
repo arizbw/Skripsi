@@ -1,26 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { LoadScript, GoogleMap, DirectionsService, DirectionsRenderer } from "@react-google-maps/api";
+import GoogleMap from "../../components/GoogleMap";
 import { Modal } from "../../components/Modal";
 import axiosAuthInstance from '../../utils/axios-auth-instance';
+import { useNavigate } from 'react-router-dom';
+import jwtDecode from 'jwt-decode';
 
 function DetailPengiriman({ pengiriman, updatePengirimanList }) {
+  const navigate = useNavigate();
   const [modalKonfirmasi, setModalKonfirmasi] = useState(false);
-  const [directions, setDirections] = useState(null);
-  const [directionsRequested, setDirectionsRequested] = useState(false)
+  const [isOpenSuccess, setIsOpenSuccess] = useState(false);
+  const [isOpenError, setIsOpenError] = useState(false);
 
   useEffect(() => {
-    setDirections(null);              // reset rute
-    setDirectionsRequested(false);   // izinkan request rute baru
-  }, [pengiriman]);
-
-  const directionsCallback = (response) => {
-    if (response !== null && response.status === 'OK') {
-      setDirections(response);
-      setDirectionsRequested(true);
-    } else {
-      console.error('Gagal mendapatkan rute:', response);
+    // DEBUG LOGGING
+    if (pengiriman) {
+      console.log('=== PENGIRIMAN DATA DEBUG ===');
+      console.log('Full pengiriman object:', pengiriman);
+      console.log('all_coords exists?', 'all_coords' in pengiriman);
+      console.log('all_coords value:', pengiriman.all_coords);
+      console.log('all_coords type:', typeof pengiriman.all_coords);
+      console.log('all_coords length:', pengiriman.all_coords?.length);
+      console.log('location_routes:', pengiriman.location_routes);
+      console.log('location_routes length:', pengiriman.location_routes?.length);
+      console.log('============================');
     }
-  };
+  }, [pengiriman]);
 
   if (!pengiriman) {
     return (
@@ -38,14 +42,19 @@ function DetailPengiriman({ pengiriman, updatePengirimanList }) {
 
   const handleSimpanPengiriman = async () => {
     try {
-      await axiosAuthInstance.patch(`/shipment/simpan/${pengiriman.shipment_num}`, {
-        action: 'Simpan'
-      });
+      if (pengiriman.shipment_num?.startsWith('DRAF')) {
+        await axiosAuthInstance.post('/priority-opt/bulk-save', { shipments: [pengiriman] });
+      } else {
+        await axiosAuthInstance.patch(`/shipment/simpan/${pengiriman.shipment_num}`, {
+          action: 'Simpan'
+        });
+      }
       updatePengirimanList(pengiriman.shipment_num, 'saved');
       setModalKonfirmasi(false);
+      setIsOpenSuccess(true);
     } catch (error) {
       console.error('Gagal menyimpan pengiriman:', error);
-      alert('Terjadi kesalahan saat menyimpan pengiriman.');
+      setIsOpenError(true);
     }
   };
 
@@ -78,58 +87,51 @@ function DetailPengiriman({ pengiriman, updatePengirimanList }) {
     };
   });
 
+  // Parse all_coords if it's a string, otherwise use it directly
+  let routeCoordinates = [];
+  if (pengiriman.all_coords) {
+    if (typeof pengiriman.all_coords === 'string') {
+      try {
+        routeCoordinates = JSON.parse(pengiriman.all_coords);
+      } catch (e) {
+        console.error('Failed to parse all_coords:', e);
+      }
+    } else if (Array.isArray(pengiriman.all_coords)) {
+      routeCoordinates = pengiriman.all_coords;
+    }
+  }
 
-  const mapContainerStyle = {
-    width: "100%",
-    height: "400px",
-  };
+  const mapCenter =
+    routeCoordinates.length > 0
+      ? [routeCoordinates[0][0], routeCoordinates[0][1]]
+      : locationRoutes.length > 0
+      ? [locationRoutes[0].latitude, locationRoutes[0].longitude]
+      : [-6.2257, 106.7612];
 
-  const center = locationRoutes.length > 0
-    ? { lat: locationRoutes[0].latitude, lng: locationRoutes[0].longitude }
-    : { lat: 0, lng: 0 };
+  const mapMarkers = locationRoutes.map((route, index) => ({
+    lat: route.latitude,
+    lng: route.longitude,
+    label: index + 1,
+    popup: (
+      <div>
+        <b>{route.is_dc ? route.dc?.name : route.customer?.name}</b>
+        <p style={{ margin: '4px 0 0' }}>{route.address}</p>
+      </div>
+    ),
+  }));
 
   return (
     <div className="w-2/3 space-y-4">
       <div className="bg-neutral-10 rounded-b-md p-6">
         <h2 className="text-lg font-medium mb-4">Peta Rute</h2>
         <div className="h-[400px] bg-gray-100 rounded-lg mb-4">
-          <LoadScript googleMapsApiKey={process.env.REACT_APP_GOOGLE_MAPS_KEY}>
-            <GoogleMap
-              key={pengiriman.shipment_num} // force remount saat shipment berubah
-              mapContainerStyle={mapContainerStyle}
-              center={center}
-              zoom={15}
-            >
-              {locationRoutes.length > 1 && !directionsRequested && (
-                <DirectionsService
-                  options={{
-                    destination: {
-                      lat: locationRoutes[locationRoutes.length - 1].latitude,
-                      lng: locationRoutes[locationRoutes.length - 1].longitude,
-                    },
-                    origin: {
-                      lat: locationRoutes[0].latitude,
-                      lng: locationRoutes[0].longitude,
-                    },
-                    waypoints: locationRoutes.slice(1, -1).map(route => ({
-                      location: { lat: route.latitude, lng: route.longitude },
-                      stopover: true,
-                    })),
-                    travelMode: 'DRIVING',
-                  }}
-                  callback={directionsCallback}
-                />
-              )}
-
-              {directions && (
-                <DirectionsRenderer
-                  options={{
-                    directions: directions,
-                  }}
-                />
-              )}
-            </GoogleMap>
-          </LoadScript>
+          <GoogleMap
+            center={mapCenter}
+            zoom={12}
+            height="400px"
+            polyline={routeCoordinates}
+            markers={mapMarkers}
+          />
         </div>
 
         <div className="space-y-6">
@@ -168,6 +170,15 @@ function DetailPengiriman({ pengiriman, updatePengirimanList }) {
                   {`Rp${(pengiriman.shipment_cost || 0).toLocaleString('id-ID')},00`}
                 </p>
               </div>
+              {pengiriman.total_emission !== null &&
+                pengiriman.total_emission !== undefined && (
+                  <div>
+                    <p className="text-xs text-gray-600">Total Emisi CO2</p>
+                    <p className="text-sm">
+                      {(pengiriman.total_emission / 1000).toFixed(2)} kg
+                    </p>
+                  </div>
+                )}
             </div>
           </div>
 
@@ -289,6 +300,30 @@ function DetailPengiriman({ pengiriman, updatePengirimanList }) {
         rightButtonText="Yakin"
         leftButtonText="Batal"
         onClickRight={handleSimpanPengiriman}
+      />
+      <Modal
+        variant="primary"
+        isOpen={isOpenSuccess}
+        closeModal={() => setIsOpenSuccess(false)}
+        description="Pengiriman berhasil disimpan!"
+        rightButtonText="Selesai"
+        onClickRight={() => {
+          let userRole = '';
+          const token = sessionStorage.getItem('token');
+          if (token) {
+            const decodedToken = jwtDecode(token);
+            userRole = decodedToken.role?.name;
+          }
+          const basePath = userRole === 'Super' ? '/administrator' : '';
+          navigate(`${basePath}/pengiriman`);
+        }}
+      />
+      <Modal
+        variant="danger"
+        isOpen={isOpenError}
+        closeModal={() => setIsOpenError(false)}
+        description="Terjadi kesalahan saat menyimpan pengiriman"
+        rightButtonText="Tutup"
       />
     </div>
   );

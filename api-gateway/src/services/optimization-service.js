@@ -25,9 +25,10 @@ import axios from "axios";
 import { logger } from "../config/logging.js";
 
 const priorityOptimizationService = async (request) => {
-  const dc_id = parseInt(request.headers.dc_id);
+  let dc_id = parseInt(request.headers.dc_id);
   const list_delivery_orders = request.body.delivery_orders_id;
   const priority = request.body.priority;
+  const isPreview = request.query?.preview === 'true';
 
   const delivery_orders = await getAllDOsOptimization(
     list_delivery_orders,
@@ -37,6 +38,10 @@ const priorityOptimizationService = async (request) => {
     null,
     false
   );
+
+  if (isNaN(dc_id) && delivery_orders.length > 0) {
+    dc_id = delivery_orders[0].loc_ori?.dc_id;
+  }
 
   const list_destination_location = [
     ...new Set(delivery_orders.map((do_) => do_.loc_dest.id)),
@@ -127,6 +132,8 @@ const priorityOptimizationService = async (request) => {
           total_time: shipment.total_time,
           total_time_with_waiting: shipment.total_time_with_waiting,
           total_dist: shipment.total_dist,
+          // Forward total emission from Django optimizer (grams of CO2) when in emission mode
+          total_emission: shipment.total_emission ?? null,
           additional_info: shipment.additional_info,
           current_capacity: shipment.current_capacity,
           max_capacity: shipment.max_capacity,
@@ -141,6 +148,19 @@ const priorityOptimizationService = async (request) => {
     if (shipments.length === 0) {
       return {
         shipments: [],
+        failedDO,
+        status: 200,
+      };
+    }
+
+    if (isPreview) {
+      // Just return the shipments without saving
+      const shipmentResponse = shipments.map((shipment, index) => ({
+        ...shipment,
+        shipment_num: `DRAF-PREVIEW-${index + 1}`
+      }));
+      return {
+        shipments: shipmentResponse,
         failedDO,
         status: 200,
       };
@@ -167,6 +187,7 @@ const priorityOptimizationService = async (request) => {
         created_at: new Date().toISOString(),
         created_by: "User",
         shipment_cost: shipment.shipment_cost,
+        total_co2_emission_g: shipment.total_emission ?? null,
       });
 
       await Promise.all(
@@ -223,4 +244,70 @@ const priorityOptimizationService = async (request) => {
   }
 };
 
-export { priorityOptimizationService };
+const saveBulkShipmentService = async (request) => {
+  const shipments = request.body.shipments;
+  if (!shipments || !Array.isArray(shipments)) {
+    throw new Error("Invalid payload: shipments array is required");
+  }
+
+  const shipmentResponse = [];
+  for (const shipment of shipments) {
+    const shipment_count = await countShipment();
+    const createdShipment = await createShipment({
+      shipment_num: await IdGenerator("shipment", shipment_count + 1),
+      total_dist: shipment.additional_info.reduce(
+        (total, info) => total + info.travel_distance,
+        0
+      ),
+      total_dist_unit: "meter",
+      total_time: shipment.total_time,
+      total_time_unit: "menit",
+      total_time_with_waiting: shipment.total_time_with_waiting,
+      total_time_with_waiting_unit: "menit",
+      all_coords: JSON.stringify(shipment.all_coords),
+      total_volume: shipment.current_capacity,
+      truck_id: shipment.truck.id,
+      status: "DRAF",
+      created_at: new Date().toISOString(),
+      created_by: "User",
+      shipment_cost: shipment.shipment_cost,
+      total_co2_emission_g: shipment.total_emission ?? null,
+    });
+
+    await Promise.all(
+      shipment.additional_info.map((info) =>
+        createShipmentLocation({
+          shipment_id: createdShipment.id,
+          location_id: info.loc_dest_id,
+          queue: info.queue,
+          travel_time: info.travel_time,
+          travel_distance: info.travel_distance,
+          travel_time_unit: "menit",
+          travel_distance_unit: "meter",
+        })
+      )
+    );
+
+    await Promise.all(
+      shipment.delivery_orders.map(async (deliveryOrder) => {
+        await createShipmentDO({
+          shipment_id: createdShipment.id,
+          delivery_order_id: deliveryOrder.id,
+        });
+        await updateStatusDO("IN_CALCULATION", deliveryOrder.id);
+      })
+    );
+
+    shipmentResponse.push({
+      ...shipment,
+      shipment_num: createdShipment.shipment_num,
+    });
+  }
+
+  return {
+    shipments: shipmentResponse,
+    status: 201,
+  };
+};
+
+export { priorityOptimizationService, saveBulkShipmentService };

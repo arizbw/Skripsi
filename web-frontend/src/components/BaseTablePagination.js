@@ -44,7 +44,7 @@ export function ActionButtonsPagination({ value }) {
   )
 }
 
-export function BaseTablePagination({ columns, data, currentPage, totalPages, pageSize, onPageChange, onPageSizeChange, loading, showView = true, judul, showVisualisasiButton = false }) {
+export function BaseTablePagination({ columns, data, currentPage, totalPages, pageSize, onPageChange, onPageSizeChange, loading, showView = true, showEdit = false, onEdit, judul, showVisualisasiButton = false }) {
   const navigate = useNavigate()
   const [selectedShipments, setSelectedShipments] = useState([])
   const [allChecked, setAllChecked] = useState(false)
@@ -83,10 +83,12 @@ export function BaseTablePagination({ columns, data, currentPage, totalPages, pa
           <div className="mt-[20px] flex flex-col w-full">
             <div className="overflow-auto">
               <div className="py-2 align-middle inline-block min-w-full">
-                <div className="overflow-hidden border-b border-gray-200 rounded-sm">
-                  <div className="flex justify-between bg-neutral-10 px-5 py-3 items-center rounded-t-[7px] border border-primary-border">
-                    <p className="font-semibold text-[16px]">{judul}</p>
-                  </div>
+                <div className="overflow-hidden border-b border-gray-200 rounded-[7px] border border-primary-border">
+                  {judul && (
+                    <div className="flex justify-between bg-neutral-10 px-5 py-3 items-center rounded-t-[7px] border-b border-primary-border">
+                      <p className="font-semibold text-[16px]">{judul}</p>
+                    </div>
+                  )}
                   <div className="overflow-x-auto">
                     <table className="min-w-full">
                       <thead className="bg-primary-hover">
@@ -102,7 +104,7 @@ export function BaseTablePagination({ columns, data, currentPage, totalPages, pa
                         {data.map((row, rowIndex) => (
                           <tr key={rowIndex}>
                             {columns.map((column, colIndex) => (
-                              <td key={colIndex} className="px-2 py-3 text-neutral-90 text-left text-m max-w-[100px] break-words ">
+                              <td key={colIndex} className={`px-2 py-3 text-neutral-90 text-left text-m break-words ${column.width || 'max-w-[200px]'}`}>
                                 {column.Header === 'No' ? (
                                   (currentPage - 1) * pageSize + rowIndex + 1 // Calculate numbering based on current page and page size
                                 ) : column.Header === 'Action' ? (
@@ -120,13 +122,20 @@ export function BaseTablePagination({ columns, data, currentPage, totalPages, pa
 
                                     {/* Tombol Detail, dikontrol HANYA oleh `showView` */}
                                     {showView && (
-                                        <button
-                                            className="flex items-center px-2 py-1 bg-gray-500 text-white rounded-md text-xs hover:bg-gray-600 transition-colors"
-                                            onClick={() => onViewDetail(row.id)}
+                                        <BsEye
+                                            className="cursor-pointer text-gray-500 hover:text-blue-500 mr-2"
                                             title="View Detail"
-                                        >
-                                            Detail
-                                        </button>
+                                            onClick={() => onViewDetail(row.id)}
+                                        />
+                                    )}
+
+                                    {/* Tombol Edit */}
+                                    {showEdit && (
+                                        <BsPencilSquare 
+                                          className="cursor-pointer text-gray-500 hover:text-blue-500" 
+                                          title="Edit" 
+                                          onClick={() => onEdit(row.id)} 
+                                        />
                                     )}
                                   </div>
 

@@ -364,7 +364,7 @@ async function getDetailShipmentByIdForWeb(id) {
 async function getShipmentByNum(shipmentNum) {
   return await prisma.shipment.findFirst({
     where: { shipment_num: shipmentNum },
-    select: { id: true },
+    select: { id: true, truck_id: true },
   });
 }
 

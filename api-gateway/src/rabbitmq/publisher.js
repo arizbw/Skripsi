@@ -6,7 +6,7 @@ dotenv.config();
 const EXCHANGE = process.env.RABBITMQ_EXCHANGE;
 
 export const publishBoxJob = async (payload) => {
-  const channel = getChannel();
+  const channel = await getChannel();
   await channel.assertExchange(EXCHANGE, "direct", { durable: true });
 
   console.log("[PUBLISHER] Sending message to exchange");
